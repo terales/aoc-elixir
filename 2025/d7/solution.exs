@@ -3,7 +3,7 @@ defmodule Aoc do
     Grid.build(input, ["S", "^", "."])
     |> Grid.replace_start("|")
     |> shine()
-    |> then(fn {_, splits} -> splits end)
+    |> then(fn {_, splits_total} -> splits_total end)
   end
 
   def part2(input) do
@@ -11,8 +11,6 @@ defmodule Aoc do
     |> Grid.replace_start(1)
     |> split_time()
     |> then(fn grind_enlightened ->
-      Grid.print(grind_enlightened)
-
       last_row =
         grind_enlightened
         |> Enum.map(fn {{_, row}, _} -> row end)
@@ -28,8 +26,9 @@ defmodule Aoc do
   defp shine(grid, curr_row \\ 0, splits \\ 0) do
     grid
     |> Enum.filter(&match?({{_, ^curr_row}, "|"}, &1))
+    |> Enum.map(&elem(&1, 0))
     |> Enum.reduce({grid, splits, 0}, fn curr_beam, {grid_previous, splits, _} ->
-      next_beams = Grid.move(grid_previous, elem(curr_beam, 0))
+      next_beams = Grid.move(grid_previous, curr_beam)
 
       grid_changed =
         next_beams
@@ -42,20 +41,16 @@ defmodule Aoc do
       {grid_changed, splits, length(next_beams)}
     end)
     |> then(fn {grid_changed, splits, next_beams_len} ->
-      if next_beams_len == 0 do
-        {grid_changed, splits}
-      else
-        shine(grid_changed, curr_row + 1, splits)
-      end
+      if next_beams_len == 0,
+        do: {grid_changed, splits},
+        else: shine(grid_changed, curr_row + 1, splits)
     end)
   end
 
   defp split_time(grid, curr_row \\ 0) do
     grid
     |> Enum.filter(fn {{_, row}, val} -> row == curr_row and is_integer(val) end)
-    |> Enum.reduce(grid, fn {curr_pos, curr_value}, grid_before ->
-      curr_beam_power = curr_value
-
+    |> Enum.reduce(grid, fn {curr_pos, curr_beam_power}, grid_before ->
       grid_before
       |> Grid.move(curr_pos)
       |> Enum.reduce(grid_before, fn next_move, grid_after ->
@@ -77,23 +72,6 @@ defmodule Aoc do
     end)
   end
 end
-
-# .......1.......
-# .......1.......
-# ......1^1......
-# ......1.1......
-# .....1^2^1.....
-# .....1.2.1.....
-# ....1^3^3^1....
-# ....1.3.3.1....
-# ...1^4^331^1...
-# ...1.4.331.1...
-# ..1^5^434^2^1..
-# ..1.5.434.2.1..
-# .1^154^44.21^1.  /// it should be 74 but we've got 54
-# .1.154.44.21.1.
-# 1^2^10^8^8^211^1
-# 1.2.10.8.8.211.1
 
 defmodule Grid do
   def build(input, cells_to_keep) do
@@ -145,9 +123,9 @@ end
 sample = File.read!("./sample.txt")
 input = File.read!("./input.txt")
 
-# IO.puts("--- Part 1 ---")
-# sample |> Aoc.part1() |> IO.inspect(label: "Sample")
-# input  |> Aoc.part1() |> IO.inspect(label: "Input")
+IO.puts("--- Part 1 ---")
+sample |> Aoc.part1() |> IO.inspect(label: "Sample")
+input  |> Aoc.part1() |> IO.inspect(label: "Input")
 
 IO.puts("\n--- Part 2 ---")
 sample |> Aoc.part2() |> IO.inspect(label: "Sample")
