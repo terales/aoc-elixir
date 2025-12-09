@@ -1,5 +1,4 @@
 defmodule Aoc do
-  require Integer
   defp parse_input(input) do
     for line <- String.split(input, "\n", trim: true) do
       [x, y] = String.split(line, ",")
